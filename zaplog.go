@@ -14,9 +14,9 @@ import (
 // 初始化
 
 var (
+	Logger       *zap.Logger        // 标准 logger
+	Sugar        *zap.SugaredLogger // 语法糖
 	cfg          zap.Config         // log 配置
-	logger       *zap.Logger        // 标准 logger
-	sugar        *zap.SugaredLogger // 语法糖
 	source       string             // source 信息
 	currentLevel Level              // 当前信息等级
 )
@@ -39,7 +39,7 @@ func init() {
 	cfg = zap.Config{
 		Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
 		Development:      false,
-		DisableCaller:    true,
+		DisableCaller:    true, // 是否打印行号
 		Encoding:         "console",
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
@@ -95,72 +95,6 @@ func SetEncoding(e string) {
 func SetDevelopment(dev bool) {
 	cfg.Development = dev
 	reBuildByCfg()
-}
-
-// 输出1个 debug 信息
-func Debug(msg string, fields ...zap.Field) {
-	// defer logger.Sync()
-	logger.Debug(msg, fields...)
-}
-
-// 格式化输出1个 debug 信息
-func Debugf(format string, args ...interface{}) {
-	sugar.Debugf(format, args...)
-}
-
-// 输出1个 Info 信息
-func Info(msg string, fields ...zap.Field) {
-	// defer logger.Sync()
-	logger.Info(msg, fields...)
-}
-
-// 格式化输出1个 info 信息
-func Infof(format string, args ...interface{}) {
-	sugar.Infof(format, args...)
-}
-
-// 输出1个 Warn 信息
-func Warn(msg string, fields ...zap.Field) {
-	// defer logger.Sync()
-	logger.Warn(msg, fields...)
-}
-
-// 格式化输出1个 Warn 信息
-func Warnf(format string, args ...interface{}) {
-	sugar.Warnf(format, args...)
-}
-
-// 输出1个 Error 信息
-func Error(msg string, fields ...zap.Field) {
-	// defer logger.Sync()
-	logger.Error(msg, fields...)
-}
-
-// 格式化输出1个 Error 信息
-func Errorf(format string, args ...interface{}) {
-	sugar.Errorf(format, args...)
-}
-
-// 输出1个 Panic 信息
-func Panic(msg string, fields ...zap.Field) {
-	// defer logger.Sync()
-	logger.Panic(msg, fields...)
-}
-
-// 格式化输出1个 panic 信息
-func Panicf(format string, args ...interface{}) {
-	sugar.Panicf(format, args...)
-}
-
-// 输出1个 Fatal 信息
-func Fatal(msg string, fields ...zap.Field) {
-	// defer logger.Sync()
-	logger.Fatal(msg, fields...)
-}
-
-// 格式化输出一条 Fatal 信息
-func Fatalf(format string, args ...interface{}) {
-	sugar.Fatalf(format, args)
 }
 
 // 格式化1个 int8 字段
@@ -229,15 +163,15 @@ func Duration(key string, v time.Duration) zap.Field {
 // 根据 onfig 重新编译 Logger
 func reBuildByCfg() {
 	if newLogger, err := cfg.Build(); nil == err {
-		if logger != nil {
-			logger.Sync()
+		if Logger != nil {
+			Logger.Sync()
 		}
-		logger = newLogger
+		Logger = newLogger
 		// logger = logger.With(zap.Time("ts", time.Now()))
 		if source != "" {
-			logger = logger.With(zap.String("source", source))
+			Logger = Logger.With(zap.String("source", source))
 		}
-		setSugar(logger.Sugar())
+		setSugar(Logger.Sugar())
 	} else {
 		panic(err)
 	}
@@ -246,6 +180,6 @@ func reBuildByCfg() {
 // 设置 Sugar
 func setSugar(s *zap.SugaredLogger) {
 	if nil != s {
-		sugar = s
+		Sugar = s
 	}
 }
